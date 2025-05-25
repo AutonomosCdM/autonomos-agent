@@ -8,6 +8,7 @@ import {
   ConversationService,
   AgentService 
 } from '../../services/database';
+import { MessageProcessor } from '../../services/message-processor';
 
 export const whatsappRouter = Router();
 
@@ -69,17 +70,39 @@ whatsappRouter.post('/:orgSlug', async (req, res) => {
       { message_sid: MessageSid }
     );
 
-    // Get agent for this channel
-    const agent = await AgentService.getForChannel(channel.id);
+    // Process message with AI
+    const messageProcessor = new MessageProcessor();
     
-    if (!agent) {
-      logger.error('No agent configured for channel', { channelId: channel.id });
-      return res.status(200).send('<Response></Response>');
-    }
+    try {
+      const aiResponse = await messageProcessor.processMessage({
+        organizationId: organization.id,
+        channelId: channel.id,
+        conversationId,
+        messageContent: Body,
+        metadata: { message_sid: MessageSid }
+      });
 
-    // TODO: Process message with AI agent
-    // TODO: Send response via Twilio
+      // Send response via Twilio
+      const twilioClient = twilio(
+        channel.configuration.twilio_account_sid as string,
+        channel.configuration.twilio_auth_token as string
+      );
+
+      await twilioClient.messages.create({
+        body: aiResponse,
+        from: `whatsapp:${To}`,
+        to: `whatsapp:${From}`
+      });
+
+      logger.info('WhatsApp response sent', { 
+        conversationId, 
+        responseLength: aiResponse.length 
+      });
+    } catch (error) {
+      logger.error('Error processing WhatsApp message', { error, conversationId });
+    }
     
+    // Always return 200 to acknowledge receipt
     res.status(200).send('<Response></Response>');
   } catch (error) {
     logger.error('WhatsApp webhook error', { error, orgSlug });
