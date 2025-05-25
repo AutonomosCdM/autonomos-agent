@@ -22,6 +22,7 @@ const configSchema = z.object({
   SLACK_CLIENT_ID: z.string(),
   SLACK_CLIENT_SECRET: z.string(),
   SLACK_SIGNING_SECRET: z.string(),
+  SLACK_BOT_TOKEN: z.string(),
   
   // Redis
   REDIS_URL: z.string(),
@@ -56,6 +57,7 @@ export const config = {
     clientId: env.data.SLACK_CLIENT_ID,
     clientSecret: env.data.SLACK_CLIENT_SECRET,
     signingSecret: env.data.SLACK_SIGNING_SECRET,
+    botToken: env.data.SLACK_BOT_TOKEN,
   },
   redis: {
     url: env.data.REDIS_URL,

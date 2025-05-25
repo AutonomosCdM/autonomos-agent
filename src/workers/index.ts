@@ -1,13 +1,17 @@
 import { logger } from '../utils/logger';
 import { messageWorker, closeMessageWorker } from './message-worker';
 import { webhookWorker, closeWebhookWorker } from './webhook-worker';
+import { startSlackWorkers, stopSlackWorkers } from './slack-worker';
 
 export async function startWorkers() {
   logger.info('Starting workers...');
   
-  // Workers are automatically started when imported
+  // Start BullMQ workers (automatically started when imported)
   logger.info('Message worker started');
   logger.info('Webhook worker started');
+  
+  // Start Slack monitoring workers
+  await startSlackWorkers();
 }
 
 export async function stopWorkers() {
@@ -16,6 +20,7 @@ export async function stopWorkers() {
   await Promise.all([
     closeMessageWorker(),
     closeWebhookWorker(),
+    stopSlackWorkers(),
   ]);
   
   logger.info('All workers stopped');
