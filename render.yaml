@@ -41,3 +41,4 @@ services:
     name: autonomos-redis
     plan: starter
     maxmemoryPolicy: allkeys-lru
+    ipAllowList: []  # Allow connections only from Render services
