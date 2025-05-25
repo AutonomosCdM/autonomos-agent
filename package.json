@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit --skipLibCheck",
-    "railway:start": "npm run build && npm start"
+    "render:build": "npm run build && echo 'Build completed successfully'",
+    "postinstall": "npm run build"
   },
   "keywords": [
     "ai",
