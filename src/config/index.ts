@@ -11,26 +11,26 @@ const configSchema = z.object({
   
   // AI APIs
   ANTHROPIC_API_KEY: z.string().optional(),
-  OPENROUTER_API_KEY: z.string(),
+  OPENROUTER_API_KEY: z.string().default('placeholder'),
   
   // Supabase
-  SUPABASE_URL: z.string(),
-  SUPABASE_ANON_KEY: z.string(),
-  SUPABASE_SERVICE_KEY: z.string(),
+  SUPABASE_URL: z.string().default('http://localhost:54321'),
+  SUPABASE_ANON_KEY: z.string().default('placeholder'),
+  SUPABASE_SERVICE_KEY: z.string().default('placeholder'),
   
   // Twilio
-  TWILIO_ACCOUNT_SID: z.string(),
-  TWILIO_AUTH_TOKEN: z.string(),
-  TWILIO_WHATSAPP_NUMBER: z.string(),
+  TWILIO_ACCOUNT_SID: z.string().default('placeholder'),
+  TWILIO_AUTH_TOKEN: z.string().default('placeholder'),
+  TWILIO_WHATSAPP_NUMBER: z.string().default('placeholder'),
   
   // Slack
-  SLACK_CLIENT_ID: z.string(),
-  SLACK_CLIENT_SECRET: z.string(),
-  SLACK_SIGNING_SECRET: z.string(),
-  SLACK_BOT_TOKEN: z.string(),
+  SLACK_CLIENT_ID: z.string().default('placeholder'),
+  SLACK_CLIENT_SECRET: z.string().default('placeholder'),
+  SLACK_SIGNING_SECRET: z.string().default('placeholder'),
+  SLACK_BOT_TOKEN: z.string().default('placeholder'),
   
   // Redis
-  REDIS_URL: z.string(),
+  REDIS_URL: z.string().default('redis://localhost:6379'),
 });
 
 export type Config = z.infer<typeof configSchema>;

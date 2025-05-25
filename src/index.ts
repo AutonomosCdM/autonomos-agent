@@ -13,16 +13,40 @@ app.use(express.json());
 // Health check
 app.get('/health', async (_req, res) => {
   try {
-    // TODO: Add Redis health check
-    res.json({ 
-      status: 'ok', 
+    const health = {
+      status: 'ok',
       timestamp: new Date().toISOString(),
       environment: config.nodeEnv,
-    });
+      version: '0.1.0',
+      services: {
+        web: 'ok',
+        redis: 'not_configured',
+        supabase: 'not_configured',
+        slack: 'not_configured'
+      }
+    };
+
+    // Check Redis if configured
+    if (config.redis.url !== 'redis://localhost:6379' && config.redis.url !== 'placeholder') {
+      health.services.redis = 'configured';
+    }
+
+    // Check Supabase if configured
+    if (config.supabase.url !== 'http://localhost:54321' && config.supabase.url !== 'placeholder') {
+      health.services.supabase = 'configured';
+    }
+
+    // Check Slack if configured
+    if (config.slack.botToken !== 'placeholder') {
+      health.services.slack = 'configured';
+    }
+
+    res.json(health);
   } catch (error) {
     res.status(503).json({ 
       status: 'error', 
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -36,13 +60,23 @@ const PORT = config.port;
 // Start server and workers
 async function start() {
   try {
-    // Start workers
-    await startWorkers();
+    // Start workers only if Redis is configured
+    if (config.redis.url !== 'redis://localhost:6379' && config.redis.url !== 'placeholder') {
+      try {
+        await startWorkers();
+        logger.info('Workers started successfully');
+      } catch (error) {
+        logger.warn('Workers failed to start, continuing without queue processing', { error });
+      }
+    } else {
+      logger.warn('Redis not configured, running without workers');
+    }
     
     // Start HTTP server
     const server = app.listen(PORT, () => {
       logger.info(`Autonomos Agent running on port ${PORT}`);
       logger.info(`Environment: ${config.nodeEnv}`);
+      logger.info(`Health check available at http://localhost:${PORT}/health`);
     });
 
     // Graceful shutdown
@@ -53,7 +87,12 @@ async function start() {
         logger.info('HTTP server closed');
       });
 
-      await closeQueues();
+      try {
+        await closeQueues();
+      } catch (error) {
+        logger.warn('Error closing queues', { error });
+      }
+      
       process.exit(0);
     };
 
