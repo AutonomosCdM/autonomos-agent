@@ -40,7 +40,7 @@ export async function authenticateApiKey(
 
 export async function optionalAuth(
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> {
   try {

@@ -1,4 +1,4 @@
-import { Queue, Worker, QueueEvents } from 'bullmq';
+import { Queue, QueueEvents } from 'bullmq';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 
@@ -63,7 +63,7 @@ export const messageQueueEvents = new QueueEvents('messages', { connection });
 export const webhookQueueEvents = new QueueEvents('webhooks', { connection });
 
 // Log queue events
-messageQueueEvents.on('completed', ({ jobId, returnvalue }) => {
+messageQueueEvents.on('completed', ({ jobId }) => {
   logger.info(`Message job ${jobId} completed`);
 });
 

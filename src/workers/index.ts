@@ -1,6 +1,6 @@
 import { logger } from '../utils/logger';
-import { messageWorker, closeMessageWorker } from './message-worker';
-import { webhookWorker, closeWebhookWorker } from './webhook-worker';
+import { closeMessageWorker } from './message-worker';
+import { closeWebhookWorker } from './webhook-worker';
 import { startSlackWorkers, stopSlackWorkers } from './slack-worker';
 
 export async function startWorkers() {

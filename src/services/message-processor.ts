@@ -2,7 +2,7 @@ import { OpenRouterService } from './ai/openrouter';
 import { ConversationService, AgentService } from './database';
 import { logger } from '../utils/logger';
 import { config } from '../config';
-import type { ChannelAgentDetails } from '../types/database';
+// Types imported when needed
 
 export interface ProcessMessageOptions {
   organizationId: string;
@@ -87,7 +87,7 @@ export class MessageProcessor {
     options: ProcessMessageOptions,
     onChunk: (chunk: string) => void
   ): Promise<string> {
-    const { organizationId, channelId, conversationId, messageContent, metadata } = options;
+    const { organizationId, channelId, conversationId, metadata } = options;
 
     try {
       const agent = await AgentService.getForChannel(channelId);
