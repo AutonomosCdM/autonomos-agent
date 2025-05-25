@@ -1,12 +1,10 @@
 import { Router } from 'express';
 import twilio from 'twilio';
 import { logger } from '../../utils/logger';
-import { config } from '../../config';
 import { 
   OrganizationService, 
   ChannelService, 
-  ConversationService,
-  AgentService 
+  ConversationService
 } from '../../services/database';
 import { MessageProcessor } from '../../services/message-processor';
 
@@ -103,9 +101,9 @@ whatsappRouter.post('/:orgSlug', async (req, res) => {
     }
     
     // Always return 200 to acknowledge receipt
-    res.status(200).send('<Response></Response>');
+    return res.status(200).send('<Response></Response>');
   } catch (error) {
     logger.error('WhatsApp webhook error', { error, orgSlug });
-    res.status(500).send('Internal Server Error');
+    return res.status(500).send('Internal Server Error');
   }
 });

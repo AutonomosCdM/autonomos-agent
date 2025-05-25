@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 
 // Health check
-app.get('/health', async (req, res) => {
+app.get('/health', async (_req, res) => {
   try {
     // TODO: Add Redis health check
     res.json({ 

@@ -15,9 +15,9 @@ slackRouter.post('/events', async (req, res) => {
     // TODO: Validate Slack signature
     // TODO: Process event
     
-    res.status(200).send('OK');
+    return res.status(200).send('OK');
   } catch (error) {
     logger.error('Slack webhook error', { error });
-    res.status(500).send('Internal Server Error');
+    return res.status(500).send('Internal Server Error');
   }
 });

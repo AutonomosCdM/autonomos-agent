@@ -1,7 +1,8 @@
-import { ClaudeService } from './ai/claude';
-import { ConversationService, AgentService, OrganizationService } from './database';
+import { OpenRouterService } from './ai/openrouter';
+import { ConversationService, AgentService } from './database';
 import { logger } from '../utils/logger';
-import type { Channel, ChannelAgentDetails } from '../types/database';
+import { config } from '../config';
+import type { ChannelAgentDetails } from '../types/database';
 
 export interface ProcessMessageOptions {
   organizationId: string;
@@ -12,10 +13,10 @@ export interface ProcessMessageOptions {
 }
 
 export class MessageProcessor {
-  private claudeService: ClaudeService;
+  private openRouterService: OpenRouterService;
 
   constructor() {
-    this.claudeService = new ClaudeService();
+    this.openRouterService = new OpenRouterService(config.openrouter.apiKey);
   }
 
   async processMessage(options: ProcessMessageOptions): Promise<string> {
@@ -35,11 +36,14 @@ export class MessageProcessor {
       const messages = history.reverse();
 
       // Generate AI response
-      const aiResponse = await this.claudeService.generateResponse(
+      const aiResponse = await this.openRouterService.generateResponse(
         messages,
         agent.system_prompt || undefined,
-        agent.model,
-        agent.configuration?.max_tokens as number || 1000
+        {
+          model: agent.model,
+          maxTokens: agent.configuration?.max_tokens as number || 1000,
+          temperature: agent.configuration?.temperature as number || 0.7
+        }
       );
 
       // Store AI response
@@ -94,11 +98,14 @@ export class MessageProcessor {
       const history = await ConversationService.getHistory(conversationId, 20);
       const messages = history.reverse();
 
-      const aiResponse = await this.claudeService.streamResponse(
+      const aiResponse = await this.openRouterService.streamResponse(
         messages,
         agent.system_prompt || undefined,
-        agent.model,
-        agent.configuration?.max_tokens as number || 1000,
+        {
+          model: agent.model,
+          maxTokens: agent.configuration?.max_tokens as number || 1000,
+          temperature: agent.configuration?.temperature as number || 0.7
+        },
         onChunk
       );
 

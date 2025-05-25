@@ -30,10 +30,10 @@ BEGIN
   INSERT INTO agents (organization_id, name, description, system_prompt, model, configuration)
   VALUES (
     org_id,
-    'Test Assistant',
-    'A helpful AI assistant for testing',
-    'You are a helpful AI assistant. Be concise and friendly in your responses.',
-    'claude-3-sonnet-20240229',
+    'Autonomos Assistant',
+    'A helpful AI assistant powered by OpenRouter',
+    'You are Autonomos, a helpful AI assistant. You help users with questions and tasks. Be concise, friendly, and professional in your responses. Always respond in Spanish unless the user writes in another language.',
+    'anthropic/claude-3.5-sonnet',
     '{"temperature": 0.7, "max_tokens": 1000}'::jsonb
   );
 

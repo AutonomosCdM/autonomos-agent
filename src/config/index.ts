@@ -1,12 +1,17 @@
 import { z } from 'zod';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const configSchema = z.object({
   // Server
   PORT: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   
-  // Anthropic
-  ANTHROPIC_API_KEY: z.string(),
+  // AI APIs
+  ANTHROPIC_API_KEY: z.string().optional(),
+  OPENROUTER_API_KEY: z.string(),
   
   // Supabase
   SUPABASE_URL: z.string(),
@@ -42,6 +47,9 @@ export const config = {
   nodeEnv: env.data.NODE_ENV,
   anthropic: {
     apiKey: env.data.ANTHROPIC_API_KEY,
+  },
+  openrouter: {
+    apiKey: env.data.OPENROUTER_API_KEY,
   },
   supabase: {
     url: env.data.SUPABASE_URL,
