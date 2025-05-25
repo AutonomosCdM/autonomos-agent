@@ -29,4 +29,35 @@ const configSchema = z.object({
 
 export type Config = z.infer<typeof configSchema>;
 
-export const config = configSchema.parse(process.env);
+const env = configSchema.safeParse(process.env);
+
+if (!env.success) {
+  console.error('❌ Invalid environment variables:', env.error.format());
+  process.exit(1);
+}
+
+export const config = {
+  port: parseInt(env.data.PORT || '3000', 10),
+  nodeEnv: env.data.NODE_ENV,
+  anthropic: {
+    apiKey: env.data.ANTHROPIC_API_KEY,
+  },
+  supabase: {
+    url: env.data.SUPABASE_URL,
+    anonKey: env.data.SUPABASE_ANON_KEY,
+    serviceRoleKey: env.data.SUPABASE_SERVICE_KEY,
+  },
+  twilio: {
+    accountSid: env.data.TWILIO_ACCOUNT_SID,
+    authToken: env.data.TWILIO_AUTH_TOKEN,
+    whatsappNumber: env.data.TWILIO_WHATSAPP_NUMBER,
+  },
+  slack: {
+    clientId: env.data.SLACK_CLIENT_ID,
+    clientSecret: env.data.SLACK_CLIENT_SECRET,
+    signingSecret: env.data.SLACK_SIGNING_SECRET,
+  },
+  redis: {
+    url: env.data.REDIS_URL,
+  },
+};

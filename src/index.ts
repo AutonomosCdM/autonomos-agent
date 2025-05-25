@@ -17,7 +17,7 @@ app.get('/health', (req, res) => {
 app.use('/webhook/whatsapp', whatsappRouter);
 app.use('/webhook/slack', slackRouter);
 
-const PORT = config.PORT || 3000;
+const PORT = config.port;
 
 app.listen(PORT, () => {
   logger.info(`Autonomos Agent running on port ${PORT}`);
