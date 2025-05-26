@@ -31,6 +31,7 @@ const configSchema = z.object({
   
   // Redis
   REDIS_URL: z.string().default('redis://localhost:6379'),
+  REDIS_TLS_URL: z.string().optional(), // Render provides this
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -68,6 +69,6 @@ export const config = {
     botToken: env.data.SLACK_BOT_TOKEN,
   },
   redis: {
-    url: env.data.REDIS_URL,
+    url: env.data.REDIS_TLS_URL || env.data.REDIS_URL,
   },
 };

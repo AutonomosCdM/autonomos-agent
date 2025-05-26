@@ -45,6 +45,9 @@ npm run dev
 ### Production (Render)
 See [docs/RENDER_DEPLOYMENT.md](docs/RENDER_DEPLOYMENT.md) for complete deployment guide.
 
+**Quick Deploy Checklist:**
+- See [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) for step-by-step deployment verification
+
 ### Local Development
 See [docs/SLACK_SETUP.md](docs/SLACK_SETUP.md) for Slack integration setup.
 
