@@ -50,6 +50,27 @@ export class SlackWebAPIClient {
     }
   }
 
+  async postMessage(params: { channel: string; text: string; thread_ts?: string }): Promise<boolean> {
+    try {
+      const result = await this.client.chat.postMessage(params);
+
+      if (result.ok) {
+        logger.info('Message sent to Slack', { 
+          channel: params.channel, 
+          threadTs: params.thread_ts,
+          ts: result.ts 
+        });
+        return true;
+      } else {
+        logger.error('Failed to send Slack message:', result.error);
+        return false;
+      }
+    } catch (error) {
+      logger.error('Error sending Slack message:', error);
+      return false;
+    }
+  }
+
   async getChannelHistory(limit = 10): Promise<SlackMessage[]> {
     try {
       const result = await this.client.conversations.history({

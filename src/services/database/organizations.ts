@@ -52,4 +52,17 @@ export class OrganizationService {
     if (error) throw error;
     return data;
   }
+
+  static async getBySlackWorkspace(_workspaceId: string): Promise<Organization | null> {
+    // For now, return the test organization
+    // TODO: Implement proper slack workspace mapping
+    const { data, error } = await supabaseAdmin
+      .from('organizations')
+      .select('*')
+      .eq('slug', 'test-company')
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  }
 }

@@ -7,6 +7,7 @@ import {
   ConversationService
 } from '../../services/database';
 import { MessageProcessor } from '../../services/message-processor';
+import { config } from '../../config';
 
 export const whatsappRouter = Router();
 
@@ -22,7 +23,7 @@ whatsappRouter.post('/:orgSlug', async (req, res) => {
     }
 
     // Extract WhatsApp data
-    const { From, To, Body, MessageSid } = req.body;
+    const { From, To, Body, MessageSid, ProfileName } = req.body;
     
     if (!From || !Body) {
       return res.status(400).send('Invalid request');
@@ -41,22 +42,35 @@ whatsappRouter.post('/:orgSlug', async (req, res) => {
       return res.status(404).send('Channel not found');
     }
 
-    // TODO: Validate Twilio signature
-    // const twilioSignature = req.headers['x-twilio-signature'] as string;
-    // const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-    // const isValid = twilio.validateRequest(
-    //   channel.configuration.twilio_auth_token as string,
-    //   twilioSignature,
-    //   url,
-    //   req.body
-    // );
+    // Validate Twilio signature
+    const twilioSignature = req.headers['x-twilio-signature'] as string;
+    if (twilioSignature && channel.configuration.twilio_auth_token) {
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      const url = `${protocol}://${host}${req.originalUrl}`;
+      
+      const isValid = twilio.validateRequest(
+        channel.configuration.twilio_auth_token as string,
+        twilioSignature,
+        url,
+        req.body
+      );
+
+      if (!isValid && config.nodeEnv === 'production') {
+        logger.warn('Invalid Twilio signature for channel', { channelId: channel.id, url });
+        return res.status(401).send('Unauthorized');
+      }
+    }
 
     // Get or create conversation
     const conversationId = await ConversationService.getOrCreate(
       organization.id,
       channel.id,
       From,
-      { user_phone: From }
+      { 
+        user_phone: From,
+        user_name: ProfileName || From
+      }
     );
 
     // Store user message
@@ -65,7 +79,10 @@ whatsappRouter.post('/:orgSlug', async (req, res) => {
       conversationId,
       'user',
       Body,
-      { message_sid: MessageSid }
+      { 
+        message_sid: MessageSid,
+        profile_name: ProfileName
+      }
     );
 
     // Process message with AI
@@ -77,8 +94,20 @@ whatsappRouter.post('/:orgSlug', async (req, res) => {
         channelId: channel.id,
         conversationId,
         messageContent: Body,
-        metadata: { message_sid: MessageSid }
+        metadata: { 
+          message_sid: MessageSid,
+          user_name: ProfileName || From
+        }
       });
+
+      // Store AI response
+      await ConversationService.addMessage(
+        organization.id,
+        conversationId,
+        'assistant',
+        aiResponse,
+        { generated_by: 'openrouter' }
+      );
 
       // Send response via Twilio
       const twilioClient = twilio(
@@ -86,7 +115,7 @@ whatsappRouter.post('/:orgSlug', async (req, res) => {
         channel.configuration.twilio_auth_token as string
       );
 
-      await twilioClient.messages.create({
+      const sentMessage = await twilioClient.messages.create({
         body: aiResponse,
         from: `whatsapp:${To}`,
         to: `whatsapp:${From}`
@@ -94,10 +123,27 @@ whatsappRouter.post('/:orgSlug', async (req, res) => {
 
       logger.info('WhatsApp response sent', { 
         conversationId, 
-        responseLength: aiResponse.length 
+        responseLength: aiResponse.length,
+        messageSid: sentMessage.sid
       });
     } catch (error) {
       logger.error('Error processing WhatsApp message', { error, conversationId });
+      
+      // Send error message to user
+      try {
+        const twilioClient = twilio(
+          channel.configuration.twilio_account_sid as string,
+          channel.configuration.twilio_auth_token as string
+        );
+
+        await twilioClient.messages.create({
+          body: "Lo siento, ocurrió un error al procesar tu mensaje. Por favor intenta de nuevo.",
+          from: `whatsapp:${To}`,
+          to: `whatsapp:${From}`
+        });
+      } catch (sendError) {
+        logger.error('Error sending error message', { error: sendError });
+      }
     }
     
     // Always return 200 to acknowledge receipt

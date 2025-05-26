@@ -76,4 +76,27 @@ export class ChannelService {
 
     if (error) throw error;
   }
+
+  static async createOrUpdate(
+    organizationId: string, 
+    channel: Omit<Channel, 'id' | 'created_at' | 'updated_at' | 'organization_id'>
+  ): Promise<Channel> {
+    // Try to find existing channel by type and organization
+    const existing = await this.getByOrganization(organizationId);
+    const existingChannel = existing.find(ch => ch.type === channel.type);
+
+    if (existingChannel) {
+      // Update existing channel
+      return this.update(existingChannel.id, {
+        ...channel,
+        updated_at: new Date().toISOString()
+      });
+    } else {
+      // Create new channel
+      return this.create({
+        ...channel,
+        organization_id: organizationId
+      });
+    }
+  }
 }

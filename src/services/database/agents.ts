@@ -41,12 +41,18 @@ export class AgentService {
   }
 
   static async getForChannel(channelId: string): Promise<ChannelAgentDetails | null> {
-    const { data, error } = await supabaseAdmin.rpc('get_channel_agent', {
-      p_channel_id: channelId,
-    });
+    // Get primary agent for channel
+    const agent = await this.getPrimaryForChannel(channelId);
+    if (!agent) return null;
 
-    if (error) throw error;
-    return data?.[0] || null;
+    // Return in expected format
+    return {
+      agent_id: agent.id,
+      name: agent.name,
+      system_prompt: agent.system_prompt,
+      model: agent.model,
+      configuration: agent.configuration
+    } as ChannelAgentDetails;
   }
 
   static async assignToChannel(agentId: string, channelId: string, isPrimary = false): Promise<void> {
@@ -90,5 +96,21 @@ export class AgentService {
       .eq('id', id);
 
     if (error) throw error;
+  }
+
+  static async getPrimaryForChannel(channelId: string): Promise<Agent | null> {
+    // First get the primary agent assignment
+    const { data: assignment, error: assignmentError } = await supabaseAdmin
+      .from('channel_agents')
+      .select('agent_id')
+      .eq('channel_id', channelId)
+      .eq('is_primary', true)
+      .single();
+
+    if (assignmentError && assignmentError.code !== 'PGRST116') throw assignmentError;
+    if (!assignment) return null;
+
+    // Then get the agent details
+    return this.getById(assignment.agent_id);
   }
 }

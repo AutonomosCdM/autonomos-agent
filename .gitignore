@@ -47,4 +47,4 @@ pids
 
 # Temp files
 tmp/
-temp/
+temp/.env

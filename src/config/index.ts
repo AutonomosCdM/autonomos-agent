@@ -71,6 +71,6 @@ export const config = {
   },
   redis: {
     url: env.data.REDIS_TLS_URL || env.data.REDIS_URL,
-    enabled: !env.data.DISABLE_REDIS && env.data.NODE_ENV === 'production' && (env.data.REDIS_TLS_URL || env.data.REDIS_URL !== 'redis://localhost:6379'),
+    enabled: env.data.DISABLE_REDIS === 'true' ? false : (env.data.NODE_ENV === 'production' && (env.data.REDIS_TLS_URL || env.data.REDIS_URL !== 'redis://localhost:6379')),
   },
 };

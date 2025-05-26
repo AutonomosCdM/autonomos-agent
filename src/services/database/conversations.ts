@@ -8,15 +8,35 @@ export class ConversationService {
     externalId: string,
     metadata: Record<string, unknown> = {}
   ): Promise<string> {
-    const { data, error } = await supabaseAdmin.rpc('get_or_create_conversation', {
-      p_organization_id: organizationId,
-      p_channel_id: channelId,
-      p_external_id: externalId,
-      p_metadata: metadata,
-    });
+    // First try to find existing conversation
+    const { data: existing, error: findError } = await supabaseAdmin
+      .from('conversations')
+      .select('id')
+      .eq('channel_id', channelId)
+      .eq('external_id', externalId)
+      .single();
 
-    if (error) throw error;
-    return data;
+    if (findError && findError.code !== 'PGRST116') throw findError;
+    
+    if (existing) {
+      return existing.id;
+    }
+
+    // Create new conversation
+    const { data: newConv, error: createError } = await supabaseAdmin
+      .from('conversations')
+      .insert({
+        organization_id: organizationId,
+        channel_id: channelId,
+        external_id: externalId,
+        metadata,
+        status: 'active'
+      })
+      .select('id')
+      .single();
+
+    if (createError) throw createError;
+    return newConv.id;
   }
 
   static async getById(id: string): Promise<Conversation | null> {
@@ -31,10 +51,12 @@ export class ConversationService {
   }
 
   static async getHistory(conversationId: string, limit = 50): Promise<Message[]> {
-    const { data, error } = await supabaseAdmin.rpc('get_conversation_history', {
-      p_conversation_id: conversationId,
-      p_limit: limit,
-    });
+    const { data, error } = await supabaseAdmin
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true })
+      .limit(limit);
 
     if (error) throw error;
     return data || [];
@@ -47,16 +69,20 @@ export class ConversationService {
     content: string,
     metadata: Record<string, unknown> = {}
   ): Promise<string> {
-    const { data, error } = await supabaseAdmin.rpc('add_message', {
-      p_organization_id: organizationId,
-      p_conversation_id: conversationId,
-      p_role: role,
-      p_content: content,
-      p_metadata: metadata,
-    });
+    const { data, error } = await supabaseAdmin
+      .from('messages')
+      .insert({
+        organization_id: organizationId,
+        conversation_id: conversationId,
+        role,
+        content,
+        metadata
+      })
+      .select('id')
+      .single();
 
     if (error) throw error;
-    return data;
+    return data.id;
   }
 
   static async archive(id: string): Promise<void> {
@@ -75,6 +101,23 @@ export class ConversationService {
       .eq('channel_id', channelId)
       .eq('status', 'active')
       .order('updated_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  static async getMessages(
+    organizationId: string, 
+    conversationId: string, 
+    limit = 20
+  ): Promise<Message[]> {
+    const { data, error } = await supabaseAdmin
+      .from('messages')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true })
+      .limit(limit);
 
     if (error) throw error;
     return data || [];
