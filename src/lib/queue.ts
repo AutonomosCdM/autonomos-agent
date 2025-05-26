@@ -3,9 +3,12 @@ import { config } from '../config';
 import { logger } from '../utils/logger';
 
 // Queue configuration
+const redisUrl = new URL(config.redis.url);
 const connection = {
-  host: new URL(config.redis.url).hostname,
-  port: parseInt(new URL(config.redis.url).port || '6379'),
+  host: redisUrl.hostname,
+  port: parseInt(redisUrl.port || '6379'),
+  password: redisUrl.password || undefined,
+  username: redisUrl.username || undefined,
 };
 
 // Define job types
