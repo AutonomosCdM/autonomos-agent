@@ -3,13 +3,22 @@ import { config } from '../config';
 import { logger } from '../utils/logger';
 
 // Queue configuration
-const redisUrl = new URL(config.redis.url);
-const connection = {
-  host: redisUrl.hostname,
-  port: parseInt(redisUrl.port || '6379'),
-  password: redisUrl.password || undefined,
-  username: redisUrl.username || undefined,
-};
+let connection: any;
+try {
+  const redisUrl = new URL(config.redis.url);
+  connection = {
+    host: redisUrl.hostname,
+    port: parseInt(redisUrl.port || '6379'),
+    password: redisUrl.password || undefined,
+    username: redisUrl.username || undefined,
+  };
+} catch (error) {
+  console.warn('Redis URL parsing failed, using localhost fallback');
+  connection = {
+    host: 'localhost',
+    port: 6379,
+  };
+}
 
 // Define job types
 export interface MessageJob {

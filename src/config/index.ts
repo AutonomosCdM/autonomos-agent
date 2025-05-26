@@ -32,6 +32,7 @@ const configSchema = z.object({
   // Redis
   REDIS_URL: z.string().default('redis://localhost:6379'),
   REDIS_TLS_URL: z.string().optional(), // Render provides this
+  DISABLE_REDIS: z.string().optional(), // Temporary flag to disable Redis
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -70,5 +71,6 @@ export const config = {
   },
   redis: {
     url: env.data.REDIS_TLS_URL || env.data.REDIS_URL,
+    enabled: !env.data.DISABLE_REDIS && env.data.NODE_ENV === 'production' && (env.data.REDIS_TLS_URL || env.data.REDIS_URL !== 'redis://localhost:6379'),
   },
 };

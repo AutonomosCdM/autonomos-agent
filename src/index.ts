@@ -60,8 +60,8 @@ const PORT = config.port;
 // Start server and workers
 async function start() {
   try {
-    // Start workers only if Redis is configured
-    if (config.redis.url !== 'redis://localhost:6379' && config.redis.url !== 'placeholder') {
+    // Start workers only if Redis is enabled and configured
+    if (config.redis.enabled) {
       try {
         await startWorkers();
         logger.info('Workers started successfully');
@@ -69,7 +69,7 @@ async function start() {
         logger.warn('Workers failed to start, continuing without queue processing', { error });
       }
     } else {
-      logger.warn('Redis not configured, running without workers');
+      logger.warn('Redis not enabled, running without workers');
     }
     
     // Start HTTP server
